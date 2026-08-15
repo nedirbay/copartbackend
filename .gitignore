@@ -1,0 +1,4 @@
+venv
+.pytest_cache
+apps/users/__pycache__
+apps/vehicles/__pycache__
