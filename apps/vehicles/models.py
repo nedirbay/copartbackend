@@ -86,6 +86,7 @@ class Vehicle(models.Model):
     year = models.PositiveIntegerField()
     color = models.CharField(max_length=30)
     mileage = models.PositiveIntegerField(default=0)
+    photo = models.ImageField(upload_to='vehicles/%Y/%m/', null=True, blank=True, help_text="Vehicle primary photo")
     
     status = models.CharField(
         max_length=30,

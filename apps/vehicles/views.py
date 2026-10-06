@@ -1,5 +1,6 @@
 from django.db.models import Q, Sum, Count
 from rest_framework import viewsets, generics, status, permissions
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 
 from rest_framework.decorators import action
@@ -111,6 +112,7 @@ class VehicleViewSet(viewsets.ModelViewSet):
     queryset = Vehicle.objects.all().order_by('-created_at')
     serializer_class = VehicleSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     lookup_field = 'vin'
 
     def get_queryset(self):
@@ -120,8 +122,6 @@ class VehicleViewSet(viewsets.ModelViewSet):
         return Vehicle.objects.filter(
             Q(current_owner=user) | Q(pending_handover_owner=user)
         ).distinct().order_by('-created_at')
-
-
 
     def create(self, request, *args, **kwargs):
         # Only admin can create new vehicles
@@ -135,8 +135,50 @@ class VehicleViewSet(viewsets.ModelViewSet):
             validated_data=serializer.validated_data,
             created_by_user=request.user
         )
-        output_serializer = VehicleSerializer(vehicle)
+        output_serializer = VehicleSerializer(vehicle, context={'request': request})
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        if not request.user.is_admin_role:
+            check_vehicle_write_permission(instance, request.user)
+
+        old_status = instance.status
+        old_location = instance.location
+        old_owner = instance.current_owner
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        updated_instance = self.get_object()
+        changes = []
+        if old_status != updated_instance.status:
+            changes.append(f"Status: {old_status} -> {updated_instance.status}")
+        if old_location != updated_instance.location:
+            changes.append(f"Ýerleşýän ýeri: {old_location} -> {updated_instance.location}")
+        if old_owner != updated_instance.current_owner:
+            new_owner_name = updated_instance.current_owner.username if updated_instance.current_owner else "Bellenilmegen"
+            changes.append(f"Jogapkär: {new_owner_name}")
+
+        if changes:
+            VehicleHistoryLog.objects.create(
+                vehicle=updated_instance,
+                status=updated_instance.status,
+                location=updated_instance.location,
+                owner=updated_instance.current_owner,
+                changed_by=request.user,
+                note="Awtoulag maglumatlary üýtgedildi: " + ", ".join(changes)
+            )
+
+        return Response(VehicleSerializer(updated_instance, context={'request': request}).data)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.is_admin_role:
+            raise PermissionDenied("Diňe Admin awtoulagy pozup biler.")
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'], url_path='update-status-location')
     def update_status_location(self, request, vin=None):

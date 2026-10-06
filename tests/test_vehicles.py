@@ -131,3 +131,53 @@ class TestVehicles:
         assert hist_res.status_code == status.HTTP_200_OK
         assert len(hist_res.data) == 1
         assert hist_res.data[0]['note'] == 'Shipped on container #123'
+
+    def test_admin_update_vehicle(self):
+        v = Vehicle.objects.create(
+            vin='VINEDIT1111111111',
+            title='Old Title',
+            make='Toyota',
+            model='Camry',
+            year=2020,
+            color='White',
+            mileage=5000,
+            current_owner=self.admin_user
+        )
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.patch(
+            f'/api/vehicles/{v.vin}/',
+            {'title': 'Updated Title', 'color': 'Black', 'mileage': 6200}
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['title'] == 'Updated Title'
+        assert response.data['color'] == 'Black'
+        assert response.data['mileage'] == 6200
+
+    def test_admin_delete_vehicle(self):
+        v = Vehicle.objects.create(
+            vin='VINDELETE1111111',
+            title='To Delete',
+            make='Toyota',
+            model='Corolla',
+            year=2019,
+            color='Silver',
+            current_owner=self.admin_user
+        )
+        self.client.force_authenticate(user=self.admin_user)
+        res = self.client.delete(f'/api/vehicles/{v.vin}/')
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+        assert not Vehicle.objects.filter(vin='VINDELETE1111111').exists()
+
+    def test_employee_cannot_delete_vehicle(self):
+        v = Vehicle.objects.create(
+            vin='VINDELETE2222222',
+            title='To Delete By Employee',
+            make='Toyota',
+            model='Corolla',
+            year=2019,
+            color='Silver',
+            current_owner=self.emp1
+        )
+        self.client.force_authenticate(user=self.emp1)
+        res = self.client.delete(f'/api/vehicles/{v.vin}/')
+        assert res.status_code == status.HTTP_403_FORBIDDEN
