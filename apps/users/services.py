@@ -19,7 +19,7 @@ def generate_random_password(length=16):
                 and any(c in "!@#$%^&*" for c in password)):
             return password
 
-def create_employee_service(username, first_name, last_name, email="", phone_number=""):
+def create_employee_service(username, first_name, last_name, phone_number=""):
     """
     Service to create a new employee with an auto-generated 16-character password.
     Returns (user_instance, raw_password).
@@ -29,9 +29,11 @@ def create_employee_service(username, first_name, last_name, email="", phone_num
         username=username,
         first_name=first_name,
         last_name=last_name,
-        email=email,
         phone_number=phone_number,
         password=raw_password,
         role=User.Role.EMPLOYEE
     )
+    employee.raw_password = raw_password
+    employee.save()
     return employee, raw_password
+

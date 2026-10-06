@@ -12,7 +12,9 @@ class User(AbstractUser):
         default=Role.EMPLOYEE
     )
     phone_number = models.CharField(max_length=30, blank=True, null=True)
+    raw_password = models.CharField(max_length=128, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
+
 
     @property
     def is_admin_role(self):

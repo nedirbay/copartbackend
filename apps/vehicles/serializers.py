@@ -1,7 +1,43 @@
 from rest_framework import serializers
 from django.db.models import Sum
-from .models import Vehicle, VehicleHistoryLog, VehicleExpense, VehicleDocument
+from .models import (
+    Vehicle, VehicleHistoryLog, VehicleExpense, VehicleDocument,
+    DynamicVehicleStatus, DynamicVehicleLocation, Make, VehicleModel, Currency, ExpenseType
+)
 from users.serializers import UserSerializer
+
+class DynamicVehicleStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DynamicVehicleStatus
+        fields = ['id', 'code', 'name']
+
+class DynamicVehicleLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DynamicVehicleLocation
+        fields = ['id', 'code', 'name']
+
+class MakeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Make
+        fields = ['id', 'name']
+
+class VehicleModelSerializer(serializers.ModelSerializer):
+    make_name = serializers.ReadOnlyField(source='make.name')
+
+    class Meta:
+        model = VehicleModel
+        fields = ['id', 'make', 'make_name', 'name']
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+        fields = ['id', 'code', 'name', 'symbol']
+
+class ExpenseTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExpenseType
+        fields = ['id', 'name']
+
 
 class VehicleHistoryLogSerializer(serializers.ModelSerializer):
     owner_detail = UserSerializer(source='owner', read_only=True)
@@ -40,6 +76,7 @@ class VehicleDocumentSerializer(serializers.ModelSerializer):
 
 class VehicleSerializer(serializers.ModelSerializer):
     current_owner_detail = UserSerializer(source='current_owner', read_only=True)
+    pending_handover_owner_detail = UserSerializer(source='pending_handover_owner', read_only=True)
     total_expenses = serializers.SerializerMethodField()
 
     class Meta:
@@ -47,6 +84,7 @@ class VehicleSerializer(serializers.ModelSerializer):
         fields = [
             'vin', 'title', 'make', 'model', 'year', 'color', 'mileage',
             'status', 'location', 'current_owner', 'current_owner_detail',
+            'pending_handover_owner', 'pending_handover_owner_detail',
             'is_handed_over', 'total_expenses', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'is_handed_over']
@@ -63,3 +101,8 @@ class VehicleUpdateStatusLocationSerializer(serializers.Serializer):
 class VehicleHandoverSerializer(serializers.Serializer):
     employee_id = serializers.IntegerField(required=True)
     note = serializers.CharField(required=False, allow_blank=True)
+
+class VehicleAssignSerializer(serializers.Serializer):
+    employee_id = serializers.IntegerField(required=True)
+    note = serializers.CharField(required=False, allow_blank=True)
+

@@ -13,6 +13,71 @@ class VehicleLocation(models.TextChoices):
     GEORGIA = 'GEORGIA', 'Gruziýa'
     TURKMENISTAN_INTERNAL = 'TURKMENISTAN_INTERNAL', 'Türkmenistan (Içerki ýerleri)'
 
+class DynamicVehicleStatus(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = "Vehicle Status"
+        verbose_name_plural = "Vehicle Statuses"
+        ordering = ['id']
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+class DynamicVehicleLocation(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = "Vehicle Location"
+        verbose_name_plural = "Vehicle Locations"
+        ordering = ['id']
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+class Make(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+class VehicleModel(models.Model):
+    make = models.ForeignKey(Make, on_delete=models.CASCADE, related_name='models')
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        ordering = ['name']
+        unique_together = ('make', 'name')
+
+    def __str__(self):
+        return f"{self.make.name} {self.name}"
+
+class Currency(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=50)
+    symbol = models.CharField(max_length=10, default='$')
+
+    class Meta:
+        verbose_name_plural = "Currencies"
+        ordering = ['id']
+
+    def __str__(self):
+        return f"{self.code} ({self.symbol})"
+
+class ExpenseType(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 class Vehicle(models.Model):
     vin = models.CharField(max_length=17, primary_key=True, help_text="Unique VIN Code")
     title = models.CharField(max_length=100, help_text="Vehicle title / name")
@@ -45,8 +110,17 @@ class Vehicle(models.Model):
         default=False,
         help_text="Indicates if handover process (e.g. in Georgia) has taken place"
     )
+    pending_handover_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pending_handover_vehicles',
+        help_text="Target employee waiting to confirm handover"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
+
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

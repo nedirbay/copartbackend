@@ -1,5 +1,39 @@
 from django.contrib import admin
-from .models import Vehicle, VehicleHistoryLog, VehicleExpense, VehicleDocument
+from .models import (
+    Vehicle, VehicleHistoryLog, VehicleExpense, VehicleDocument,
+    DynamicVehicleStatus, DynamicVehicleLocation, Make, VehicleModel, Currency, ExpenseType
+)
+
+@admin.register(DynamicVehicleStatus)
+class DynamicVehicleStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'code', 'name')
+    search_fields = ('code', 'name')
+
+@admin.register(DynamicVehicleLocation)
+class DynamicVehicleLocationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'code', 'name')
+    search_fields = ('code', 'name')
+
+@admin.register(Make)
+class MakeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+@admin.register(VehicleModel)
+class VehicleModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'make', 'name')
+    list_filter = ('make',)
+    search_fields = ('name', 'make__name')
+
+@admin.register(Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'code', 'name', 'symbol')
+    search_fields = ('code', 'name')
+
+@admin.register(ExpenseType)
+class ExpenseTypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
 
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
@@ -21,3 +55,4 @@ class VehicleExpenseAdmin(admin.ModelAdmin):
 class VehicleDocumentAdmin(admin.ModelAdmin):
     list_display = ('vehicle', 'title', 'document_type', 'uploaded_by', 'created_at')
     search_fields = ('vehicle__vin', 'title')
+

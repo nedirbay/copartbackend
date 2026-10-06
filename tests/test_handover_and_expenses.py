@@ -36,22 +36,41 @@ class TestHandoverAndExpenses:
         )
 
     def test_handover_to_employee(self):
+        # 1. Admin assigns vehicle to emp
         self.client.force_authenticate(user=self.admin_user)
-        response = self.client.post(
-            f'/api/vehicles/{self.vehicle.vin}/handover/',
+        assign_res = self.client.post(
+            f'/api/vehicles/{self.vehicle.vin}/assign/',
             {
                 'employee_id': self.emp.id,
-                'note': 'Handed over in Poti port, Georgia'
+                'note': 'Assigned to emp_gruziya'
             }
         )
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data['vehicle']['is_handed_over'] is True
-        
+        assert assign_res.status_code == status.HTTP_200_OK
         self.vehicle.refresh_from_db()
         assert self.vehicle.current_owner == self.emp
 
-        # Employee can now access and update the vehicle
+        # 2. emp initiates handover to emp2
+        emp2 = User.objects.create_user(username='emp_tkm', password='Password123!', role=User.Role.EMPLOYEE)
         self.client.force_authenticate(user=self.emp)
+        handover_res = self.client.post(
+            f'/api/vehicles/{self.vehicle.vin}/handover/',
+            {
+                'employee_id': emp2.id,
+                'note': 'Handover request for emp_tkm'
+            }
+        )
+        assert handover_res.status_code == status.HTTP_200_OK
+
+        # 3. emp2 confirms handover
+        self.client.force_authenticate(user=emp2)
+        confirm_res = self.client.post(f'/api/vehicles/{self.vehicle.vin}/confirm-handover/')
+        assert confirm_res.status_code == status.HTTP_200_OK
+        
+        self.vehicle.refresh_from_db()
+        assert self.vehicle.current_owner == emp2
+        assert self.vehicle.is_handed_over is True
+
+        # emp2 can now update vehicle status
         update_res = self.client.post(
             f'/api/vehicles/{self.vehicle.vin}/update-status-location/',
             {
@@ -62,6 +81,7 @@ class TestHandoverAndExpenses:
         )
         assert update_res.status_code == status.HTTP_200_OK
         assert update_res.data['vehicle']['status'] == VehicleStatus.ARRIVED_TKM
+
 
     def test_expenses_tracking(self):
         self.client.force_authenticate(user=self.admin_user)

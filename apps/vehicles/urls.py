@@ -1,9 +1,20 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import VehicleViewSet, VehicleExpenseViewSet, VehicleDocumentViewSet
+from .views import (
+    VehicleViewSet, VehicleExpenseViewSet, VehicleDocumentViewSet,
+    DynamicVehicleStatusViewSet, DynamicVehicleLocationViewSet,
+    MakeViewSet, VehicleModelViewSet, CurrencyViewSet, ExpenseTypeViewSet
+)
 
 router = DefaultRouter()
+router.register(r'dictionaries/statuses', DynamicVehicleStatusViewSet, basename='dict-status')
+router.register(r'dictionaries/locations', DynamicVehicleLocationViewSet, basename='dict-location')
+router.register(r'dictionaries/makes', MakeViewSet, basename='dict-make')
+router.register(r'dictionaries/models', VehicleModelViewSet, basename='dict-model')
+router.register(r'dictionaries/currencies', CurrencyViewSet, basename='dict-currency')
+router.register(r'dictionaries/expense-types', ExpenseTypeViewSet, basename='dict-expense-type')
 router.register(r'', VehicleViewSet, basename='vehicle')
+
 
 expense_list = VehicleExpenseViewSet.as_view({
     'get': 'list',

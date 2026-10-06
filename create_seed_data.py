@@ -9,12 +9,73 @@ import django
 django.setup()
 
 from django.contrib.auth import get_user_model
-from vehicles.models import Vehicle, VehicleStatus, VehicleLocation, VehicleHistoryLog, VehicleExpense
+from vehicles.models import (
+    Vehicle, VehicleStatus, VehicleLocation, VehicleHistoryLog, VehicleExpense,
+    DynamicVehicleStatus, DynamicVehicleLocation, Make, VehicleModel, Currency, ExpenseType
+)
 
 User = get_user_model()
 
 def create_seed():
     print("Creating seed data...")
+
+    # 0. Dictionaries Seed
+    statuses = [
+        ('PURCHASED', 'Satyn alyndy'),
+        ('IN_TRANSIT', 'Ýolda'),
+        ('ARRIVED_TKM', 'Türkmenistana geldi'),
+        ('SOLD', 'Satyldy'),
+    ]
+    for code, name in statuses:
+        DynamicVehicleStatus.objects.get_or_create(code=code, defaults={'name': name})
+
+    locations = [
+        ('USA_COPART', 'Amerika (Copart)'),
+        ('SHIPPING_TRANSIT', 'Ýük daşama ýola çykaryldy'),
+        ('GEORGIA', 'Gruziýa'),
+        ('TURKMENISTAN_INTERNAL', 'Türkmenistan (Içerki ýerleri)'),
+    ]
+    for code, name in locations:
+        DynamicVehicleLocation.objects.get_or_create(code=code, defaults={'name': name})
+
+    currencies = [
+        ('USD', 'Dollar ($)', '$'),
+        ('TMT', 'Manat (m.)', 'm.'),
+        ('EUR', 'Euro (€)', '€'),
+    ]
+    for code, name, symbol in currencies:
+        Currency.objects.get_or_create(code=code, defaults={'name': name, 'symbol': symbol})
+
+    expense_types = [
+        'Copart Auksion tölegi',
+        'Konteýner / Ýük daşama tölegi (Shipping)',
+        'Gruziýa awtovoz / port tölegi',
+        'Serhet / Gözgörme tölegi',
+        'Ussa we Bejergi tölegi',
+        'Resminama / Ätiýaçlandyryş tölegi',
+        'Başga çykdajy',
+    ]
+    for exp_name in expense_types:
+        ExpenseType.objects.get_or_create(name=exp_name)
+
+    makes_and_models = {
+        'Toyota': ['Camry', 'Corolla', 'RAV4', 'Highlander', 'Land Cruiser', 'Avalon', 'Prius'],
+        'BMW': ['X5', 'X6', 'X7', '3 Series', '5 Series', '7 Series'],
+        'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class', 'GLE', 'G-Class', 'CLA'],
+        'Ford': ['Fusion', 'Escape', 'F-150', 'Mustang', 'Explorer', 'Focus'],
+        'Hyundai': ['Elantra', 'Sonata', 'Tucson', 'Santa Fe', 'Genesis'],
+        'Tesla': ['Model 3', 'Model Y', 'Model S', 'Model X'],
+        'Nissan': ['Rogue', 'Altima', 'Sentra', 'Murano'],
+        'Chevrolet': ['Malibu', 'Cruze', 'Equinox', 'Tahoe'],
+        'Honda': ['Accord', 'Civic', 'CR-V', 'Pilot'],
+    }
+    for make_name, models_list in makes_and_models.items():
+        make_obj, _ = Make.objects.get_or_create(name=make_name)
+        for model_name in models_list:
+            VehicleModel.objects.get_or_create(make=make_obj, name=model_name)
+
+    print("Dictionaries seeded successfully.")
+
 
     # 1. Create Admin User
     admin, created = User.objects.get_or_create(
@@ -46,8 +107,10 @@ def create_seed():
     )
     if emp_created or not employee.check_password('employeepassword123'):
         employee.set_password('employeepassword123')
+        employee.raw_password = 'employeepassword123'
         employee.save()
         print("Created/Updated Employee user: isgar_merdan / employeepassword123")
+
 
     # 3. Create Sample Vehicle 1
     v1, v1_created = Vehicle.objects.get_or_create(
