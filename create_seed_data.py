@@ -17,9 +17,12 @@ from vehicles.models import (
 User = get_user_model()
 
 def create_seed():
-    print("Creating seed data...")
+    print("=" * 60)
+    print("  COPART ERP - BAŞLANGYÇ MAGLUMATLARY ÝÜKLEMEK SCRIPT-I")
+    print("=" * 60)
 
-    # 0. Dictionaries Seed
+    # 1. Dictionaries Seed
+    print("\n[1/4] Sözlükler döredilýär...")
     statuses = [
         ('PURCHASED', 'Satyn alyndy'),
         ('IN_TRANSIT', 'Ýolda'),
@@ -51,8 +54,10 @@ def create_seed():
         'Konteýner / Ýük daşama tölegi (Shipping)',
         'Gruziýa awtovoz / port tölegi',
         'Serhet / Gözgörme tölegi',
+        'Gümrük (Rastamožka) tölegi',
         'Ussa we Bejergi tölegi',
         'Resminama / Ätiýaçlandyryş tölegi',
+        'Ýangyç tölegi',
         'Başga çykdajy',
     ]
     for exp_name in expense_types:
@@ -60,24 +65,28 @@ def create_seed():
 
     makes_and_models = {
         'Toyota': ['Camry', 'Corolla', 'RAV4', 'Highlander', 'Land Cruiser', 'Avalon', 'Prius'],
-        'BMW': ['X5', 'X6', 'X7', '3 Series', '5 Series', '7 Series'],
-        'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class', 'GLE', 'G-Class', 'CLA'],
+        'Lexus': ['RX350', 'ES350', 'GX460', 'LX570', 'LX600', 'NX200', 'IS250'],
+        'BMW': ['X5', 'X6', 'X7', '3 Series', '5 Series', '7 Series', 'M5'],
+        'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class', 'GLE', 'GLS', 'G-Class', 'CLA'],
         'Ford': ['Fusion', 'Escape', 'F-150', 'Mustang', 'Explorer', 'Focus'],
-        'Hyundai': ['Elantra', 'Sonata', 'Tucson', 'Santa Fe', 'Genesis'],
-        'Tesla': ['Model 3', 'Model Y', 'Model S', 'Model X'],
-        'Nissan': ['Rogue', 'Altima', 'Sentra', 'Murano'],
-        'Chevrolet': ['Malibu', 'Cruze', 'Equinox', 'Tahoe'],
+        'Hyundai': ['Elantra', 'Sonata', 'Tucson', 'Santa Fe', 'Genesis', 'Palisade'],
+        'Kia': ['Optima', 'K5', 'Sportage', 'Sorento', 'Carnival', 'Stinger'],
+        'Tesla': ['Model 3', 'Model Y', 'Model S', 'Model X', 'Cybertruck'],
+        'Nissan': ['Rogue', 'Altima', 'Sentra', 'Murano', 'Patrol'],
+        'Chevrolet': ['Malibu', 'Cruze', 'Equinox', 'Tahoe', 'Suburban', 'Camaro'],
         'Honda': ['Accord', 'Civic', 'CR-V', 'Pilot'],
+        'Audi': ['A4', 'A6', 'Q5', 'Q7', 'Q8'],
+        'Volkswagen': ['Jetta', 'Passat', 'Tiguan', 'Touareg', 'Golf'],
     }
     for make_name, models_list in makes_and_models.items():
         make_obj, _ = Make.objects.get_or_create(name=make_name)
         for model_name in models_list:
             VehicleModel.objects.get_or_create(make=make_obj, name=model_name)
 
-    print("Dictionaries seeded successfully.")
+    print("  -> Statuslar, ýerleşýän ýerler, pul birlikleri, çykdajylar we markalar döredildi.")
 
-
-    # 1. Create Admin User
+    # 2. Users Seed
+    print("\n[2/4] Ulanyjylar döredilýär...")
     admin, created = User.objects.get_or_create(
         username='admin',
         defaults={
@@ -92,10 +101,9 @@ def create_seed():
     if created or not admin.check_password('adminpassword123'):
         admin.set_password('adminpassword123')
         admin.save()
-        print("Created/Updated Admin user: admin / adminpassword123")
+    print("  -> Admin: username='admin' | password='adminpassword123'")
 
-    # 2. Create Employee User
-    employee, emp_created = User.objects.get_or_create(
+    employee1, emp1_created = User.objects.get_or_create(
         username='isgar_merdan',
         defaults={
             'first_name': 'Merdan',
@@ -105,14 +113,32 @@ def create_seed():
             'role': User.Role.EMPLOYEE
         }
     )
-    if emp_created or not employee.check_password('employeepassword123'):
-        employee.set_password('employeepassword123')
-        employee.raw_password = 'employeepassword123'
-        employee.save()
-        print("Created/Updated Employee user: isgar_merdan / employeepassword123")
+    if emp1_created or not employee1.check_password('employeepassword123'):
+        employee1.set_password('employeepassword123')
+        employee1.raw_password = 'employeepassword123'
+        employee1.save()
+    print("  -> Işgär 1: username='isgar_merdan' | password='employeepassword123'")
 
+    employee2, emp2_created = User.objects.get_or_create(
+        username='isgar_durdy',
+        defaults={
+            'first_name': 'Durdy',
+            'last_name': 'Gurbanow',
+            'email': 'durdy@copart.com',
+            'phone_number': '+99365654321',
+            'role': User.Role.EMPLOYEE
+        }
+    )
+    if emp2_created or not employee2.check_password('employeepassword123'):
+        employee2.set_password('employeepassword123')
+        employee2.raw_password = 'employeepassword123'
+        employee2.save()
+    print("  -> Işgär 2: username='isgar_durdy' | password='employeepassword123'")
 
-    # 3. Create Sample Vehicle 1
+    # 3. Sample Vehicles Seed
+    print("\n[3/4] Synag awtoulaglary we çykdajylary döredilýär...")
+
+    # Vehicle 1: Toyota Camry 2022
     v1, v1_created = Vehicle.objects.get_or_create(
         vin='1HGCR2F83HA123456',
         defaults={
@@ -144,13 +170,12 @@ def create_seed():
             stage="Copart",
             created_by=admin
         )
-        print("Created sample vehicle 1: 1HGCR2F83HA123456")
 
-    # 4. Create Sample Vehicle 2 (Assigned to Employee)
+    # Vehicle 2: Tesla Model 3 2021
     v2, v2_created = Vehicle.objects.get_or_create(
         vin='5YJ3E1EA7KF654321',
         defaults={
-            'title': 'Tesla Model 3 2021',
+            'title': 'Tesla Model 3 2021 Long Range',
             'make': 'Tesla',
             'model': 'Model 3',
             'year': 2021,
@@ -158,7 +183,7 @@ def create_seed():
             'mileage': 28000,
             'status': VehicleStatus.ARRIVED_TKM,
             'location': VehicleLocation.TURKMENISTAN_INTERNAL,
-            'current_owner': employee,
+            'current_owner': employee1,
             'is_handed_over': True
         }
     )
@@ -167,7 +192,7 @@ def create_seed():
             vehicle=v2,
             status=v2.status,
             location=v2.location,
-            owner=employee,
+            owner=employee1,
             changed_by=admin,
             note="Awtoulag Gruziýada Merdana tabşyryldy we Türkmenistana geldi"
         )
@@ -179,9 +204,92 @@ def create_seed():
             stage="Shipping",
             created_by=admin
         )
-        print("Created sample vehicle 2: 5YJ3E1EA7KF654321")
+        VehicleExpense.objects.create(
+            vehicle=v2,
+            title="Serhet / Gözgörme tölegi",
+            amount=350.00,
+            currency="USD",
+            stage="Customs",
+            created_by=employee1
+        )
 
-    print("Seed data creation finished successfully!")
+    # Vehicle 3: Lexus RX350 2020
+    v3, v3_created = Vehicle.objects.get_or_create(
+        vin='4T1B11HK5JU889900',
+        defaults={
+            'title': 'Lexus RX350 2020 F-Sport',
+            'make': 'Lexus',
+            'model': 'RX350',
+            'year': 2020,
+            'color': 'Çal / Kümüş',
+            'mileage': 32000,
+            'status': VehicleStatus.IN_TRANSIT,
+            'location': VehicleLocation.SHIPPING_TRANSIT,
+            'current_owner': employee2,
+            'is_handed_over': False
+        }
+    )
+    if v3_created:
+        VehicleHistoryLog.objects.create(
+            vehicle=v3,
+            status=v3.status,
+            location=v3.location,
+            owner=employee2,
+            changed_by=admin,
+            note="Awtoulag Poti portyna ugradyldy (Shipping)"
+        )
+        VehicleExpense.objects.create(
+            vehicle=v3,
+            title="Konteýner / Ýük daşama tölegi (Shipping)",
+            amount=1950.00,
+            currency="USD",
+            stage="Shipping",
+            created_by=admin
+        )
+
+    # Vehicle 4: BMW X5 2021
+    v4, v4_created = Vehicle.objects.get_or_create(
+        vin='WBA3A5C58DF112233',
+        defaults={
+            'title': 'BMW X5 2021 xDrive40i',
+            'make': 'BMW',
+            'model': 'X5',
+            'year': 2021,
+            'color': 'Gara',
+            'mileage': 41000,
+            'status': VehicleStatus.SOLD,
+            'location': VehicleLocation.TURKMENISTAN_INTERNAL,
+            'current_owner': employee1,
+            'is_handed_over': True
+        }
+    )
+    if v4_created:
+        VehicleHistoryLog.objects.create(
+            vehicle=v4,
+            status=v4.status,
+            location=v4.location,
+            owner=employee1,
+            changed_by=employee1,
+            note="Awtoulag Türkmenistanda müşderä satyldy"
+        )
+        VehicleExpense.objects.create(
+            vehicle=v4,
+            title="Ussa we Bejergi tölegi",
+            amount=420.00,
+            currency="USD",
+            stage="Repair",
+            created_by=employee1
+        )
+
+    print("  -> 4 sany synag awtoulagy (Toyota, Tesla, Lexus, BMW) we çykdajylary döredildi.")
+
+    print("\n[4/4] Taýýar!")
+    print("=" * 60)
+    print("  ULANYJY MAGLUMATLARY (GIRIŞ ÜÇIN):")
+    print("  - Admin:       admin         | adminpassword123")
+    print("  - Işgär 1:     isgar_merdan  | employeepassword123")
+    print("  - Işgär 2:     isgar_durdy   | employeepassword123")
+    print("=" * 60)
 
 if __name__ == '__main__':
     create_seed()
