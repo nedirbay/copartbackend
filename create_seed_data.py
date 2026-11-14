@@ -42,12 +42,12 @@ def create_seed():
         DynamicVehicleLocation.objects.get_or_create(code=code, defaults={'name': name})
 
     currencies = [
-        ('USD', 'Dollar ($)', '$'),
-        ('TMT', 'Manat (m.)', 'm.'),
-        ('EUR', 'Euro (€)', '€'),
+        ('USD', 'Dollar ($)', '$', '1'),
+        ('TMT', 'Manat (m.)', 'm.', '3.5'),
+        ('EUR', 'Euro (€)', '€', '0.92'),
     ]
-    for code, name, symbol in currencies:
-        Currency.objects.get_or_create(code=code, defaults={'name': name, 'symbol': symbol})
+    for code, name, symbol, rate in currencies:
+        Currency.objects.get_or_create(code=code, defaults={'name': name, 'symbol': symbol, 'usd_rate': rate})
 
     expense_types = [
         'Copart Auksion tölegi',
@@ -115,7 +115,6 @@ def create_seed():
     )
     if emp1_created or not employee1.check_password('employeepassword123'):
         employee1.set_password('employeepassword123')
-        employee1.raw_password = 'employeepassword123'
         employee1.save()
     print("  -> Işgär 1: username='isgar_merdan' | password='employeepassword123'")
 
@@ -131,7 +130,6 @@ def create_seed():
     )
     if emp2_created or not employee2.check_password('employeepassword123'):
         employee2.set_password('employeepassword123')
-        employee2.raw_password = 'employeepassword123'
         employee2.save()
     print("  -> Işgär 2: username='isgar_durdy' | password='employeepassword123'")
 

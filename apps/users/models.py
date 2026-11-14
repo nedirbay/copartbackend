@@ -12,7 +12,7 @@ class User(AbstractUser):
         default=Role.EMPLOYEE
     )
     phone_number = models.CharField(max_length=30, blank=True, null=True)
-    raw_password = models.CharField(max_length=128, blank=True, default='')
+    telegram_chat_id = models.CharField(max_length=50, blank=True, default='', help_text="Telegram bildirişleri üçin chat ID")
     created_at = models.DateTimeField(auto_now_add=True)
 
 

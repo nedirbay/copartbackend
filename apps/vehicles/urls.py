@@ -22,6 +22,8 @@ expense_list = VehicleExpenseViewSet.as_view({
 })
 expense_detail = VehicleExpenseViewSet.as_view({
     'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
     'delete': 'destroy'
 })
 

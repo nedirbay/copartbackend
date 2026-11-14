@@ -67,3 +67,21 @@ class TestUsers:
         }
         response = self.client.post('/api/auth/employees/', payload)
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+def test_employee_lookup_available_to_employee():
+    """Employees can fetch a minimal colleague list (for handover) without passwords."""
+    import pytest  # noqa: F401
+    from django.contrib.auth import get_user_model
+    from rest_framework.test import APIClient
+    User = get_user_model()
+    emp = User.objects.create_user(username='lk_emp1', password='x', role=User.Role.EMPLOYEE)
+    User.objects.create_user(username='lk_emp2', password='y', role=User.Role.EMPLOYEE, first_name='Aý')
+    client = APIClient()
+    client.force_authenticate(emp)
+    res = client.get('/api/auth/employees/lookup/')
+    assert res.status_code == 200
+    names = {u['username'] for u in res.data}
+    assert {'lk_emp1', 'lk_emp2'} <= names
+    assert all(set(u.keys()) == {'id', 'username', 'first_name', 'last_name'} for u in res.data)

@@ -114,3 +114,9 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# Telegram bildirişleri (boş bolsa diňe programmanyň içindäki bildirişler işleýär)
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+
+# Status üýtgemän näçe gün geçse "gijikýän" hasaplanýar
+STALE_VEHICLE_DAYS = int(os.environ.get('STALE_VEHICLE_DAYS', '30'))

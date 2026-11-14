@@ -33,7 +33,5 @@ def create_employee_service(username, first_name, last_name, phone_number=""):
         password=raw_password,
         role=User.Role.EMPLOYEE
     )
-    employee.raw_password = raw_password
-    employee.save()
     return employee, raw_password
 

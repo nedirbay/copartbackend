@@ -56,3 +56,13 @@ class VehicleDocumentAdmin(admin.ModelAdmin):
     list_display = ('vehicle', 'title', 'document_type', 'uploaded_by', 'created_at')
     search_fields = ('vehicle__vin', 'title')
 
+
+
+from .models import Notification
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'vehicle', 'kind', 'is_read', 'created_at')
+    list_filter = ('kind', 'is_read')
+    search_fields = ('message', 'user__username')
