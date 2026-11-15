@@ -139,5 +139,9 @@ SIMPLE_JWT = {
 # Telegram bildirişleri (boş bolsa diňe programmanyň içindäki bildirişler işleýär)
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 
+# FCM push bildirişleri (mobil programma ýapyk wagty hem). Firebase service account JSON faýlynyň ýoly.
+# Boş bolsa push öçük. Bu faýl gizlin — git-e goýmaň.
+FIREBASE_CREDENTIALS_FILE = os.environ.get('FIREBASE_CREDENTIALS_FILE', '')
+
 # Status üýtgemän näçe gün geçse "gijikýän" hasaplanýar
 STALE_VEHICLE_DAYS = int(os.environ.get('STALE_VEHICLE_DAYS', '30'))

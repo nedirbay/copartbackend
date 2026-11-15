@@ -327,3 +327,15 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user_id}: {self.message[:40]}"
+
+
+class PushDevice(models.Model):
+    """Ulanyjynyň telefony (FCM tokeni): programma ýapyk wagty hem bildiriş ugratmak üçin."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='push_devices')
+    token = models.CharField(max_length=512, unique=True)
+    platform = models.CharField(max_length=20, default='android')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user_id} ({self.platform})"

@@ -20,7 +20,7 @@ from django.contrib.auth import get_user_model
 
 from users.permissions import IsAdminUserRole
 from .models import (
-    Vehicle, VehicleHistoryLog, VehicleExpense, VehicleDocument, Notification,
+    Vehicle, VehicleHistoryLog, VehicleExpense, VehicleDocument, Notification, PushDevice,
     DynamicVehicleStatus, DynamicVehicleLocation, Make, VehicleModel, Currency, ExpenseType,
     VehicleStatus, SYSTEM_STATUS_CODES, SYSTEM_LOCATION_CODES,
 )
@@ -41,6 +41,7 @@ from .serializers import (
     RequiredReasonSerializer,
     ForceReassignSerializer,
     NotificationSerializer,
+    PushDeviceSerializer,
 )
 from .services import (
     create_vehicle_service,
@@ -967,6 +968,23 @@ class NotificationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         if not updated:
             return Response(status=status.HTTP_404_NOT_FOUND)
         notifications_changed([request.user.pk])  # ulanyjynyň beýleki enjamlary üçin
+        return Response({'ok': True})
+
+    @action(detail=False, methods=['post', 'delete'], url_path='devices')
+    def devices(self, request):
+        """
+        Telefonyň push (FCM) tokeni. POST — hasaba almak (girişden soň), DELETE — aýyrmak (çykanda).
+        Bir telefonda başga ulanyjy girse token şol ulanyja geçýär.
+        """
+        serializer = PushDeviceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        token = serializer.validated_data['token']
+        if request.method == 'DELETE':
+            PushDevice.objects.filter(user=request.user, token=token).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        PushDevice.objects.update_or_create(
+            token=token, defaults={'user': request.user, 'platform': serializer.validated_data['platform']},
+        )
         return Response({'ok': True})
 
     @action(detail=False, methods=['post'], url_path='read-all')

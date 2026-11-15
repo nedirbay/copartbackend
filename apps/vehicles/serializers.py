@@ -272,6 +272,11 @@ class ForceReassignSerializer(RequiredReasonSerializer):
     employee_id = serializers.IntegerField(required=True)
 
 
+class PushDeviceSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=512)
+    platform = serializers.ChoiceField(choices=['android', 'ios', 'web'], default='android')
+
+
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification

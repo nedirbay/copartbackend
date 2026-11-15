@@ -54,6 +54,9 @@ def notify(users, message, *, vehicle=None, kind='INFO', exclude=None):
         publish([user_group(n.user_id)], NOTIFICATION_CREATED, id=n.pk, vehicle=n.vehicle_id,
                 kind=n.kind, message=n.message, created_at=n.created_at.isoformat())
     notifications_changed(recipients.keys())
+    # Programma ýapyk wagty hem — FCM (sazlanan bolsa)
+    from .push import send_notifications
+    send_notifications(created)
 
     chat_ids = [u.telegram_chat_id for u in recipients.values() if u.telegram_chat_id]
     if chat_ids and getattr(settings, 'TELEGRAM_BOT_TOKEN', ''):

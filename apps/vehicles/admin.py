@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Vehicle, VehicleHistoryLog, VehicleExpense, VehicleDocument,
-    DynamicVehicleStatus, DynamicVehicleLocation, Make, VehicleModel, Currency, ExpenseType
+    DynamicVehicleStatus, DynamicVehicleLocation, Make, VehicleModel, Currency, ExpenseType, PushDevice
 )
 
 @admin.register(DynamicVehicleStatus)
@@ -66,3 +66,9 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ('user', 'vehicle', 'kind', 'is_read', 'created_at')
     list_filter = ('kind', 'is_read')
     search_fields = ('message', 'user__username')
+
+
+@admin.register(PushDevice)
+class PushDeviceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'platform', 'updated_at')
+    search_fields = ('user__username',)

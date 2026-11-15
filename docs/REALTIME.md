@@ -61,8 +61,20 @@ Bildiriş (`Notification`) şu ýagdaýlarda döredilýär we `notification.crea
 
 Hereketi edeniň özüne bildiriş gitmeýär. Telegram sazlanan bolsa oňa hem ugradylýar.
 
-Mobil: ulgam bildirişleri programma açyk (öňde) wagty görkezilýär. Programma ýapyk wagty
-bildiriş üçin Firebase Cloud Messaging (FCM) gerek — häzir goşulmadyk.
+Mobil: programma açyk wagty bildiriş WebSocket arkaly, ýapyk wagty FCM arkaly gelýär.
+Iki ýoldan hem gelse ID birmeňzeş — telefon bir bildiriş görkezýär.
+
+### FCM (push) sazlamak
+
+1. Firebase Console -> ⚙️ Project settings -> **Service accounts** -> *Generate new private key*.
+2. JSON faýly serwere goýuň (git-e däl!), meselem `/etc/copart/firebase-service-account.json`,
+   we diňe backend ulanyjysy okap biler ýaly: `chmod 600`.
+3. `.env`: `FIREBASE_CREDENTIALS_FILE=/etc/copart/firebase-service-account.json`
+4. `pip install -r requirements.txt && python manage.py migrate`, serweri täzeden açyň.
+5. Serwer `fcm.googleapis.com` we `oauth2.googleapis.com` salgylaryna çykyp bilmeli.
+
+Mobil programma girişden soň tokenini `POST /api/notifications/devices/ {"token": "..."}` bilen
+hasaba alýar. Ýaramsyz tokenler (programma pozulan) ugradylanda awtomatik arassalanýar.
 
 ## Lokal işletmek
 
