@@ -50,7 +50,7 @@ from .services import (
     log_event,
     sync_make_model,
 )
-from .notifications import notify, admins, notifications_changed
+from .notifications import notify, admins, notifications_changed, notify_counterpart
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -303,6 +303,9 @@ class VehicleViewSet(viewsets.ModelViewSet):
         )
         if vehicle.current_owner and vehicle.current_owner != request.user:
             notify([vehicle.current_owner], "Täze awtoulag size berkidildi.", vehicle=vehicle, kind='ASSIGNED')
+        # Beýleki Adminler hem täze awtoulag barada bilsin
+        notify(admins(), f"Täze awtoulag hasaba alyndy: {vehicle.title} ({user_label(request.user)})",
+               vehicle=vehicle, kind='CREATED', exclude=request.user)
         return Response(self._out(vehicle), status=status.HTTP_201_CREATED)
 
     TRACKED_FIELDS = {
@@ -873,6 +876,9 @@ class VehicleExpenseViewSet(viewsets.ModelViewSet):
             user=self.request.user
         )
         serializer.instance = expense
+        notify_counterpart(vehicle, self.request.user,
+                           f"Täze çykdajy: {expense.title} — {expense.amount} {expense.currency} ({user_label(self.request.user)})",
+                           'EXPENSE_ADDED')
 
     def perform_update(self, serializer):
         instance = serializer.instance
@@ -926,6 +932,8 @@ class VehicleDocumentViewSet(viewsets.ModelViewSet):
             user=self.request.user
         )
         serializer.instance = document
+        notify_counterpart(vehicle, self.request.user,
+                           f"Täze resminama: {document.title} ({user_label(self.request.user)})", 'DOCUMENT_ADDED')
 
     def perform_destroy(self, instance):
         # Pozmak hem ýazmak hukugyny talap edýär (goşmak bilen deň düzgün)

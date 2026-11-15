@@ -178,7 +178,9 @@ class TestWebsocket:
                 return out
 
             dict_events = {('dictionary.changed', 'makes'), ('dictionary.changed', 'models')}
-            assert await drain(ws1) == {('vehicle.changed', VIN), ('notifications.changed', None)} | dict_events
+            assert await drain(ws1) == {
+                ('vehicle.changed', VIN), ('notifications.changed', None), ('notification.created', None),
+            } | dict_events
             # emp2: awtoulag wakasy ýok, diňe umumy sözlük wakalary
             assert await drain(ws2) == dict_events
 
@@ -198,3 +200,55 @@ class TestWebsocket:
             assert await ws.receive_json_from() == {'type': 'session.revoked'}
             assert await ws.receive_output() == {'type': 'websocket.close', 'code': 4003}
         async_to_sync(scenario)()
+
+
+@pytest.mark.django_db(transaction=True)
+class TestNotificationCreated:
+    """Täze maglumat goşulanda bildiriş (popup / mobil ulgam bildirişi) diňe degişli ulanyja gidýär."""
+
+    @staticmethod
+    def created_for(sent):
+        return {g: p for g, p in sent if p['type'] == 'notification.created'}
+
+    def test_payload_has_content(self, users, sent):
+        admin, emp1, *_ = users
+        make_vehicle(admin)
+        sent.clear()
+        client_for(admin).post(f'/api/vehicles/{VIN}/assign/', {'employee_id': emp1.id})
+        created = self.created_for(sent)
+        assert list(created) == [f'user.{emp1.id}']
+        payload = created[f'user.{emp1.id}']
+        assert payload['vehicle'] == VIN and payload['kind'] == 'ASSIGNED'
+        assert 'berkidildi' in payload['message'] and payload['id'] and payload['created_at']
+
+    def test_new_vehicle_notifies_other_admins(self, users, sent):
+        admin, emp1, *_ = users
+        admin2 = User.objects.create_user(username='rt_admin2', password='x', role=User.Role.ADMIN)
+        sent.clear()
+        client_for(admin).post('/api/vehicles/', {
+            'vin': VIN, 'title': 'Camry', 'make': 'Toyota', 'model': 'Camry', 'year': 2020,
+            'color': 'Black', 'current_owner': emp1.id,
+        })
+        assert set(self.created_for(sent)) == {f'user.{admin2.id}', f'user.{emp1.id}'}
+
+    def test_employee_expense_notifies_admins(self, users, sent):
+        admin, emp1, *_ = users
+        make_vehicle(emp1, handed_over=True)
+        sent.clear()
+        client_for(emp1).post(f'/api/vehicles/{VIN}/expenses/', {'title': 'Port', 'amount': '100'})
+        created = self.created_for(sent)
+        assert list(created) == [f'user.{admin.id}']
+        assert created[f'user.{admin.id}']['kind'] == 'EXPENSE_ADDED'
+
+    def test_admin_document_notifies_owner(self, users, sent):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        admin, emp1, *_ = users
+        make_vehicle(emp1)
+        sent.clear()
+        client_for(admin).post(f'/api/vehicles/{VIN}/documents/', {
+            'title': 'Invoice', 'document_type': 'OTHER',
+            'file': SimpleUploadedFile('a.txt', b'x', content_type='text/plain'),
+        }, format='multipart')
+        created = self.created_for(sent)
+        assert list(created) == [f'user.{emp1.id}']
+        assert created[f'user.{emp1.id}']['kind'] == 'DOCUMENT_ADDED'

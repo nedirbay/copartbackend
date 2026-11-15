@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
-from realtime.events import NOTIFICATIONS_CHANGED, publish, user_group
+from realtime.events import NOTIFICATION_CREATED, NOTIFICATIONS_CHANGED, publish, user_group
 
 from .models import Notification
 
@@ -45,10 +45,14 @@ def notify(users, message, *, vehicle=None, kind='INFO', exclude=None):
         return
 
     text = f"{vehicle.vin}: {message}" if vehicle is not None else message
-    Notification.objects.bulk_create([
+    created = Notification.objects.bulk_create([
         Notification(user=u, vehicle=vehicle, kind=kind, message=text[:500]) for u in recipients.values()
     ])
-    # bulk_create signal ugratmaýar — real-time wakany özümiz ugradýarys
+    # bulk_create signal ugratmaýar — real-time wakalary özümiz ugradýarys
+    for n in created:
+        # Diňe eýesine: web popup / mobil ulgam bildirişi üçin mazmuny bilen
+        publish([user_group(n.user_id)], NOTIFICATION_CREATED, id=n.pk, vehicle=n.vehicle_id,
+                kind=n.kind, message=n.message, created_at=n.created_at.isoformat())
     notifications_changed(recipients.keys())
 
     chat_ids = [u.telegram_chat_id for u in recipients.values() if u.telegram_chat_id]
@@ -58,6 +62,12 @@ def notify(users, message, *, vehicle=None, kind='INFO', exclude=None):
                 _send_telegram(chat_id, text)
         # Tranzaksiýa üstünlikli tamamlanandan soň, jogaby saklamazdan fon akymynda
         transaction.on_commit(lambda: threading.Thread(target=send_all, daemon=True).start())
+
+
+def notify_counterpart(vehicle, actor, message, kind):
+    """Hereketi Admin etse — jogapkär işgäre, işgär etse — Adminlere habar berýär (hereketi edeniň özüne däl)."""
+    recipients = [vehicle.current_owner] if actor.is_admin_role else admins()
+    notify(recipients, message, vehicle=vehicle, kind=kind, exclude=actor)
 
 
 def admins():

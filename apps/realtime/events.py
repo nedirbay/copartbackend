@@ -29,6 +29,8 @@ ALL_GROUP = 'all'
 VEHICLE_CHANGED = 'vehicle.changed'
 VEHICLE_DELETED = 'vehicle.deleted'
 NOTIFICATIONS_CHANGED = 'notifications.changed'
+# Täze bildiriş: müşderi popup / ulgam bildirişini görkezýär (mazmuny bilen)
+NOTIFICATION_CREATED = 'notification.created'
 DICTIONARY_CHANGED = 'dictionary.changed'
 EMPLOYEES_CHANGED = 'employees.changed'
 

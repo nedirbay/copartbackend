@@ -37,6 +37,7 @@ Birikmek: `wss://<host>/ws/?token=<JWT access token>`
 | `{"type":"vehicle.changed","vin":"..."}` | Admin + jogapkär + garaşýan + öňki jogapkär | sanawy / şol awtoulagy täzeden okamak |
 | `{"type":"vehicle.deleted","vin":"..."}` | şolar | sanawdan aýyrmak, jikme-jik sahypadan çykmak |
 | `{"type":"notifications.changed"}` | bildirişiň eýesi | okalmadyk sanyny / sanawy täzelemek |
+| `{"type":"notification.created","id":7,"vehicle":"VIN","kind":"EXPENSE_ADDED","message":"..."}` | bildirişiň eýesi | popup (web) / Android ulgam bildirişini görkezmek |
 | `{"type":"dictionary.changed","name":"statuses"}` | hemmeler | sözlügi täzeden okamak (`statuses`, `locations`, `makes`, `models`, `currencies`, `expense_types`) |
 | `{"type":"employees.changed"}` | Adminler | işgärler sanawyny täzelemek |
 | `{"type":"session.revoked"}` + ýapylyş `4003` | işjeňsizleşdirilen ulanyjy | ulgamdan çykarmak, gaýtadan birikmezlik |
@@ -45,6 +46,23 @@ Müşderi -> serwer: `{"type":"ping"}` -> `{"type":"pong"}` (nginx / proksi boş
 
 Ýapylyş kodlary: `4001` — token ýok / möhleti geçen (tokeni täzeläp gaýtadan birikmeli),
 `4003` — sessiýa ýatyryldy.
+
+## Bildirişler
+
+Bildiriş (`Notification`) şu ýagdaýlarda döredilýär we `notification.created` bilen derrew görkezilýär:
+
+| Waka | Kime |
+|---|---|
+| Täze awtoulag hasaba alyndy | jogapkär işgär + beýleki Adminler |
+| Berkidildi / mejbury geçirildi / dolandyryş yzyna alyndy | degişli işgär(ler) |
+| Status üýtgedi | Admin etse — jogapkär, işgär etse — Adminler |
+| Tabşyryş haýyşy / kabul / ret / ýatyrma | degişli işgärler (+ Adminler kabul edilende) |
+| Täze çykdajy, täze resminama | Admin goşsa — jogapkär, işgär goşsa — Adminler |
+
+Hereketi edeniň özüne bildiriş gitmeýär. Telegram sazlanan bolsa oňa hem ugradylýar.
+
+Mobil: ulgam bildirişleri programma açyk (öňde) wagty görkezilýär. Programma ýapyk wagty
+bildiriş üçin Firebase Cloud Messaging (FCM) gerek — häzir goşulmadyk.
 
 ## Lokal işletmek
 
