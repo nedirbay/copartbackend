@@ -15,6 +15,8 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
+    # ASGI serweri (runserver hem WebSocket-i goldar ýaly iň ýokarda bolmaly)
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -26,10 +28,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'channels',
 
     # Local apps
     'users',
     'vehicles',
+    'realtime',
 ]
 
 MIDDLEWARE = [
@@ -41,6 +45,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Real-time wakalary soragyň ahyrynda bir gezek ugradýar
+    'realtime.middleware.RealtimeEventsMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -62,6 +68,21 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+# Real-time (WebSocket) kanal gatlagy.
+# Prod-da REDIS_URL hökmany: birnäçe prosess / worker bolsa wakalar diňe Redis arkaly paýlanýar.
+# REDIS_URL boş bolsa ýadyda işleýär — diňe bir prosessli ösüş (development) üçin.
+REDIS_URL = os.environ.get('REDIS_URL', '')
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [REDIS_URL]},
+        }
+    }
+else:
+    CHANNEL_LAYERS = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
 
 DATABASES = {
     'default': {

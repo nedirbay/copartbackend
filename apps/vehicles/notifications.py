@@ -8,10 +8,17 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
+from realtime.events import NOTIFICATIONS_CHANGED, publish, user_group
+
 from .models import Notification
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+
+def notifications_changed(user_ids):
+    """Ulanyjylaryň bildiriş sanawy / okalmadyk sany üýtgedi (ähli enjamlaryna)."""
+    publish([user_group(uid) for uid in user_ids], NOTIFICATIONS_CHANGED)
 
 
 def _send_telegram(chat_id, text):
@@ -41,6 +48,8 @@ def notify(users, message, *, vehicle=None, kind='INFO', exclude=None):
     Notification.objects.bulk_create([
         Notification(user=u, vehicle=vehicle, kind=kind, message=text[:500]) for u in recipients.values()
     ])
+    # bulk_create signal ugratmaýar — real-time wakany özümiz ugradýarys
+    notifications_changed(recipients.keys())
 
     chat_ids = [u.telegram_chat_id for u in recipients.values() if u.telegram_chat_id]
     if chat_ids and getattr(settings, 'TELEGRAM_BOT_TOKEN', ''):

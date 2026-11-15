@@ -50,7 +50,7 @@ from .services import (
     log_event,
     sync_make_model,
 )
-from .notifications import notify, admins
+from .notifications import notify, admins, notifications_changed
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -958,9 +958,11 @@ class NotificationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         updated = Notification.objects.filter(user=request.user, pk=pk).update(is_read=True)
         if not updated:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        notifications_changed([request.user.pk])  # ulanyjynyň beýleki enjamlary üçin
         return Response({'ok': True})
 
     @action(detail=False, methods=['post'], url_path='read-all')
     def mark_all_read(self, request):
-        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        if Notification.objects.filter(user=request.user, is_read=False).update(is_read=True):
+            notifications_changed([request.user.pk])
         return Response({'ok': True})
